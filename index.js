@@ -32,6 +32,11 @@ app.set('view engine', 'ejs');
 
 app.use(express.urlencoded({extended: false}));
 
+app.use((req, res, next) => {
+    res.removeHeader('Cntent-security-policy');
+    next();
+})   
+
 var mongoStore = MongoStore.create({
 	mongoUrl: `mongodb+srv://${mongodb_user}:${mongodb_password}@hiroshi.7b9ukpb.mongodb.net/sessions`,
 	crypto: {
@@ -205,8 +210,12 @@ function adminAuthorization(req, res, next) {
 app.use('/loggedin', sessionValidation);
 app.use('/loggedin/admin', adminAuthorization);
 
-app.get('/loggedin', (req,res) => {
-    res.render("loggedin");
+app.get('/loggedin', (req, res) => {
+    if (req.session.username) {
+        res.render("loggedin", { username: req.session.username });
+    } else {
+        res.redirect('/');
+    }
 });
 
 app.get('/loggedin/info', (req,res) => {
